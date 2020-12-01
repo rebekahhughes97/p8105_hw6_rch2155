@@ -9,6 +9,7 @@ output: github_document
 library(tidyverse)
 library(modelr)
 library(p8105.datasets)
+library(patchwork)
 
 knitr::opts_chunk$set(
   fig.width = 6,
@@ -178,23 +179,49 @@ weather_df =
 
 
 ```{r}
-weather_df %>% 
+bootstrap_data =
+  weather_df %>% 
   bootstrap(5000, id = "strap_number") %>% 
   mutate(
     models = map(.x = strap, ~lm(tmax ~ tmin, data = .x)),
-    results = map(models, broom::tidy)
+    results = map(models, broom::glance),
+    results2 = map(models, broom::tidy)
   ) %>% 
-  select(strap_number, results) %>% 
+  select(strap_number, results, results2) %>% 
   unnest(results) %>% 
-  group_by(term) %>% 
+  select(strap_number, r.squared, results2) %>% 
+  unnest(results2) %>% 
+  select(strap_number, r.squared, term, estimate) %>% 
+  pivot_wider(
+    names_from = term,
+    values_from = estimate
+  ) %>% 
+  janitor::clean_names() %>% 
+  group_by(strap_number, r_squared) %>% 
   summarize(
-    av_estimate = mean(estimate),
-    sd_estimate = sd(estimate))
+    log_betas = log(intercept * tmin))
+
+r_plot =
+  bootstrap_data %>% 
+  ggplot(aes(x = r_squared)) +
+  geom_density()
+
+log_plot =
+  bootstrap_data %>% 
+  ggplot(aes(x = log_betas)) +
+  geom_density()
+
+r_plot + log_plot
 
 
-summarize(
-    ci_lower = quantile(estimate, 0.025),
-    ci_upper = quantile(estimate, 0.975)
+bootstrap_df =
+  bootstrap_data %>%
+  group_by(strap_number, r_squared, log_betas) %>% 
+  summarize(
+    rsq_ci_lower = quantile(r_squared, 0.025),
+    rsq_ci_upper = quantile(r_squared, 0.975),
+    log_ci_lower = quantile(log_betas, 0.025),
+    log_ci_upper = quantile(log_betas, 0.975),
   )
 ```
 
