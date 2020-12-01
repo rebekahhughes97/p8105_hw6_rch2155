@@ -107,13 +107,51 @@ models_results_df %>%
 
 
 ```{r}
+birthweight_df =
+  read_csv("./data/birthweight.csv")
 
+htwt_mod = lm (bwt ~ ppwt + mheight, data = birthweight_df)
+
+birthweight_df %>% 
+  add_residuals(htwt_mod) %>% 
+  add_predictions(htwt_mod) %>% 
+  ggplot(aes(x = pred, y = resid))+
+  geom_point(alpha = .3)
 ```
 
 
 
 ```{r}
+ln_gestage_mod = lm (bwt ~ blength + gaweeks, data = birthweight_df)
+hc_len_sex_mod = lm (bwt ~ bhead * blength * babysex, data = birthweight_df)
 
+cv_df =
+  crossv_mc(birthweight_df, 100) %>% 
+  mutate(
+    train = map(train, as_tibble),
+    test = map(test, as_tibble)
+  )
+
+cv_df = 
+  cv_df %>% 
+  mutate(
+    htwt_mod  = map(train, ~lm(bwt ~ ppwt + mheight, data = .x)),
+    ln_gestage_mod     = map(train, ~lm(bwt ~ blength + gaweeks, data = .x)),
+    hc_len_sex_mod  = map(train, ~lm(bwt ~ bhead * blength * babysex, data = .x))) %>% 
+  mutate(
+    rmse_htwt = map2_dbl(htwt_mod, test, ~rmse(model = .x, data = .y)),
+    rmse_gestage    = map2_dbl(ln_gestage_mod, test, ~rmse(model = .x, data = .y)),
+    rmse_len_sex = map2_dbl(hc_len_sex_mod, test, ~rmse(model = .x, data = .y)))
+
+cv_df %>% 
+  select(starts_with("rmse")) %>% 
+  pivot_longer(
+    everything(),
+    names_to = "model", 
+    values_to = "rmse",
+    names_prefix = "rmse_") %>% 
+  mutate(model = fct_inorder(model)) %>% 
+  ggplot(aes(x = model, y = rmse)) + geom_violin()
 ```
 
  
