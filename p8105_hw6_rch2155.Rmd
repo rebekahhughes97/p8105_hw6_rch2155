@@ -111,13 +111,20 @@ From the above plot, overall as the odds ratio gets larger, the confidence inter
 
 ## Problem 2
 
-
+The following code loads and cleans a dataset containing data on baby birthweight and other related variables, such as maternal age and maternal height. Missing values are also counted here.
 
 ```{r}
 birthweight_df =
   read_csv("./data/birthweight.csv")
-  
 
+birthweight_df %>% 
+  count(NA)
+```
+
+
+The following code creates a linear model with the outcome as baby birthweight and the predictors as mother's weight before pregnancy and mother's height. The fixed values are then modeled against the residuals with a line of best fit included.
+
+```{r}
 htwt_mod = lm (bwt ~ ppwt + mheight, data = birthweight_df)
 
 birthweight_df %>% 
@@ -128,11 +135,14 @@ birthweight_df %>%
   geom_line(aes(y = pred), color = "red")
 ```
 
+After the model is created, the model is used to add residuals and predictions to the data and is then plotted with predictions on the x-axis and residuals on the y-axis. The predictions are then used to model a best fit line. Overall, the points lie beneath the best fit line and do not cross the line at all.
 
+The following code creates two more linear models with the same outcome and different predictors from the model above, and manipulates the models so that they can be plotted with the model created above.
 
 ```{r}
 ln_gestage_mod = lm (bwt ~ blength + gaweeks, data = birthweight_df)
 hc_len_sex_mod = lm (bwt ~ bhead * blength * babysex, data = birthweight_df)
+
 
 cv_df =
   crossv_mc(birthweight_df, 100) %>% 
@@ -140,7 +150,9 @@ cv_df =
     train = map(train, as_tibble),
     test = map(test, as_tibble)
   )
+```
 
+```{r}
 cv_df = 
   cv_df %>% 
   mutate(
@@ -151,7 +163,12 @@ cv_df =
     rmse_htwt = map2_dbl(htwt_mod, test, ~rmse(model = .x, data = .y)),
     rmse_gestage    = map2_dbl(ln_gestage_mod, test, ~rmse(model = .x, data = .y)),
     rmse_len_sex = map2_dbl(hc_len_sex_mod, test, ~rmse(model = .x, data = .y)))
+```
 
+
+The following code chunk creates a plot based on the cross validated prediction error created above. The model variable is modeled against the rmse variable for the three models and is compared here.
+
+```{r}
 cv_df %>% 
   select(starts_with("rmse")) %>% 
   pivot_longer(
@@ -163,7 +180,7 @@ cv_df %>%
   ggplot(aes(x = model, y = rmse)) + geom_violin()
 ```
 
- 
+Of the three models in the above plot, the root mean squared error is much larger in the `htwt` (mother's weight before pregnancy and height) model compared to the other two models. The root mean squared error is overall smallest in the `len_sex` (head circumference, baby length and sex) model. This indicates that the standard deviation of the residuals for the `htwt` model are larger than the other two models overall.
 
 
 ## Problem 3
