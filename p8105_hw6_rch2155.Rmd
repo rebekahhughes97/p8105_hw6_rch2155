@@ -202,7 +202,7 @@ weather_df =
 ```
 
 
-The following code runs 5000 bootstrap samples and produces values for $\hat{r}^2$ and $\log(\hat{\beta}_0 * \hat{\beta}_1)$.
+The following code runs 5000 bootstrap samples and produces values for two estimates.
 
 ```{r, message=FALSE}
 bootstrap_data =
@@ -245,7 +245,7 @@ log_plot =
 r_plot + log_plot
 ```
 
-The first plot for $\hat{r}^2$ is fairly consistent except between 0.91 and 0.92 when there is a dip in the density. The first plot is centered around 0.91 it appears. The second plot for $\log(\hat{\beta}_0 * \hat{\beta}_1)$ is fairly consistent as well except for a slight dip in the density between 2.00 and 2.03. The second plot is centered around 2.00 approximately.
+The first plot for r squared is fairly consistent except between 0.91 and 0.92 when there is a dip in the density. The first plot is centered around 0.91 it appears. The second plot for log of the betas multiplied is fairly consistent as well except for a slight dip in the density between 2.00 and 2.03. The second plot is centered around 2.00 approximately.
 
 The following code uses the 5000 bootstrap estimates to create 95% confidence intervals for each of the estimate values. They are laid out in the data frame below.
 
