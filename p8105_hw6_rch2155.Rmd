@@ -32,7 +32,7 @@ scale_fill_discrete = scale_fill_viridis_d
 
 The following code loads and cleans data on homicides in the United States. Here, race is limited to white and black, and Tulsa, AL is removed from the dataset because it is an error.
 
-```{r}
+```{r, message=FALSE}
 homicide_df = 
   read_csv("data/homicide-data.csv", na = c("", "NA", "Unknown")) %>% 
   mutate(
@@ -113,7 +113,7 @@ From the above plot, overall as the odds ratio gets larger, the confidence inter
 
 The following code loads and cleans a dataset containing data on baby birthweight and other related variables, such as maternal age and maternal height. Missing values are also counted here.
 
-```{r}
+```{r, message=FALSE}
 birthweight_df =
   read_csv("./data/birthweight.csv")
 
@@ -180,14 +180,14 @@ cv_df %>%
   ggplot(aes(x = model, y = rmse)) + geom_violin()
 ```
 
-Of the three models in the above plot, the root mean squared error is much larger in the `htwt` (mother's weight before pregnancy and height) model compared to the other two models. The root mean squared error is overall smallest in the `len_sex` (head circumference, baby length and sex) model. This indicates that the standard deviation of the residuals for the `htwt` model are larger than the other two models overall.
+Of the three models in the above plot, the root mean squared error is much larger in the `htwt` (mother's weight before pregnancy and height) model compared to the other two models. The root mean squared error is overall smallest in the `len_sex` (head circumference, baby length and sex) model. This indicates that the standard deviation of the residuals for the `htwt` model are larger than the other two models overall and the model isn't good at predicting the observed data.
 
 
 ## Problem 3
 
+The following code loads and cleans the weather data from NOAA in R.
 
-
-```{r}
+```{r, message=FALSE}
 weather_df = 
   rnoaa::meteo_pull_monitors(
     c("USW00094728"),
@@ -202,8 +202,9 @@ weather_df =
 ```
 
 
+The following code runs 5000 bootstrap samples and produces values for $\hat{r}^2$ and $\log(\hat{\beta}_0 * \hat{\beta}_1)$.
 
-```{r}
+```{r, message=FALSE}
 bootstrap_data =
   weather_df %>% 
   bootstrap(5000, id = "strap_number") %>% 
@@ -225,7 +226,12 @@ bootstrap_data =
   group_by(strap_number, r_squared) %>% 
   summarize(
     log_betas = log(intercept * tmin))
+```
 
+
+The following code plots the distribution of the estimates found above.
+
+```{r}
 r_plot =
   bootstrap_data %>% 
   ggplot(aes(x = r_squared)) +
@@ -237,8 +243,13 @@ log_plot =
   geom_density()
 
 r_plot + log_plot
+```
 
+The first plot for $\hat{r}^2$ is fairly consistent except between 0.91 and 0.92 when there is a dip in the density. The first plot is centered around 0.91 it appears. The second plot for $\log(\hat{\beta}_0 * \hat{\beta}_1)$ is fairly consistent as well except for a slight dip in the density between 2.00 and 2.03. The second plot is centered around 2.00 approximately.
 
+The following code uses the 5000 bootstrap estimates to create 95% confidence intervals for each of the estimate values. They are laid out in the data frame below.
+
+```{r, message=FALSE}
 bootstrap_df =
   bootstrap_data %>%
   group_by(strap_number, r_squared, log_betas) %>% 
@@ -249,24 +260,3 @@ bootstrap_df =
     log_ci_upper = quantile(log_betas, 0.975),
   )
 ```
-
-
-
-
-```{r}
-
-```
-
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
