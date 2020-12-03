@@ -30,6 +30,7 @@ scale_fill_discrete = scale_fill_viridis_d
 
 ## Problem 1
 
+The following code loads and cleans data on homicides in the United States. Here, race is limited to white and black, and Tulsa, AL is removed from the dataset because it is an error.
 
 ```{r}
 homicide_df = 
@@ -48,7 +49,8 @@ homicide_df =
   select(city_state, resolution, victim_age, victim_race, victim_sex)
 ```
 
-Start with one city:
+
+The following code limits the data to Baltimore, MD and runs a logistic regression with resolution of the case as the outcome and victim race, sex, and age as the predictors.
 
 ```{r}
 baltimore_df =
@@ -68,7 +70,9 @@ glm(resolution ~ victim_age + victim_race + victim_sex,
   knitr::kable(digits = 3)
 ```
 
-Try this across cities:
+Given the above code, the adjusted odds ratio comparing non-white to white victims is 2.320 with a 95% confidence interval of 1.648 to 3.268.
+
+The following code runs a logistic regression for each of the cities in the dataset for solving homicides comparing black victims and white victims. The adjusted odds ratios and 95% confidence intervals for each city are laid out in the resulting data frame.
 
 ```{r}
 models_results_df = 
@@ -89,7 +93,8 @@ models_results_df =
   select(city_state, term, OR, starts_with("CI")) 
 ```
 
-Plot:
+
+The following code creates a plot showing the odds ratios and confidence intervals for each of the cities in the dataset, organized by odds ratio values.
 
 ```{r}
 models_results_df %>% 
@@ -101,6 +106,7 @@ models_results_df %>%
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
 
+From the above plot, overall as the odds ratio gets larger, the confidence intervals appear to get wider as well. New York, NY has the smallest odds ratio comparing solved homicides of black victims and white victims, while Albuquerque, NM has the highest odds ratio and widest confidence interval.
 
 
 ## Problem 2
@@ -110,6 +116,7 @@ models_results_df %>%
 ```{r}
 birthweight_df =
   read_csv("./data/birthweight.csv")
+  
 
 htwt_mod = lm (bwt ~ ppwt + mheight, data = birthweight_df)
 
@@ -117,7 +124,8 @@ birthweight_df %>%
   add_residuals(htwt_mod) %>% 
   add_predictions(htwt_mod) %>% 
   ggplot(aes(x = pred, y = resid))+
-  geom_point(alpha = .3)
+  geom_point(alpha = .3) +
+  geom_line(aes(y = pred), color = "red")
 ```
 
 
